@@ -40,10 +40,19 @@ const Login = (props) => {
     inputInitialState
   );
 
+  /*
+   * We can destructuring the state so we dont need to re-render / re-run the component
+   * when the state is have a value that we want. In this case we want to valid the form.
+   * So when the state is valid and we add more character, the component is not re-render unless
+   * the state is invalid.
+   */
+  const { isValid: emailIsValid } = emailState;
+  const { isValid: passwordIsValid } = passwordState;
+
   useEffect(() => {
     const userKeystroke = setTimeout(() => {
       console.log('Checking form validity / sending http request');
-      setFormIsValid(emailState.isValid && passwordState.isValid);
+      setFormIsValid(emailIsValid && passwordIsValid);
     }, 700);
 
     /*
@@ -55,7 +64,7 @@ const Login = (props) => {
       console.log('This is the clean up function');
       clearTimeout(userKeystroke);
     };
-  }, [emailState, passwordState]);
+  }, [emailIsValid, passwordIsValid]);
 
   const emailChangeHandler = (event) => {
     dispatchEmail({ type: 'USER_INPUT', payload: event.target.value });
