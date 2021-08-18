@@ -1,6 +1,10 @@
 # Learning the React Hook
 
-In this Project i learn about react hooks including useState, useEffect, useReducer and useContext Hook. There is more to learn.
+In this Project i learn about react hooks including useState, useEffect, useReducer and useContext Hook.
+
+There is an important Rules of using Hook in reactJS
+
+![alt text](https://images4.imagebam.com/93/d5/60/ME2Y1CF_o.png)
 
 ## Installation
 
