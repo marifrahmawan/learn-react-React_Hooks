@@ -1,43 +1,82 @@
-import React, { useState } from 'react';
+import React, { useReducer, useEffect, useState } from 'react';
 
 import Card from '../UI/Card/Card';
 import classes from './Login.module.css';
 import Button from '../UI/Button/Button';
 
+const inputInitialState = { value: '', isValid: null };
+
+const emailReducer = (state, action) => {
+  switch (action.type) {
+    case 'USER_INPUT':
+      return { value: action.payload, isValid: action.payload.includes('@') };
+
+    default:
+      throw new Error();
+  }
+};
+
+const passwordReducer = (state, action) => {
+  switch (action.type) {
+    case 'USER_INPUT':
+      return {
+        value: action.payload,
+        isValid: action.payload.trim().length > 6,
+      };
+
+    default:
+      throw new Error();
+  }
+};
+
 const Login = (props) => {
-  const [enteredEmail, setEnteredEmail] = useState('');
-  const [emailIsValid, setEmailIsValid] = useState();
-  const [enteredPassword, setEnteredPassword] = useState('');
-  const [passwordIsValid, setPasswordIsValid] = useState();
   const [formIsValid, setFormIsValid] = useState(false);
+  const [emailState, dispatchEmail] = useReducer(
+    emailReducer,
+    inputInitialState
+  );
+  const [passwordState, dispatchPassword] = useReducer(
+    passwordReducer,
+    inputInitialState
+  );
+
+  /*
+   * We can destructuring the state so we dont need to re-render / re-run the component
+   * when the state is have a value that we want. In this case we want to valid the form.
+   * So when the state is valid and we add more character, the component is not re-render unless
+   * the state is invalid.
+   */
+  const { isValid: emailIsValid } = emailState;
+  const { isValid: passwordIsValid } = passwordState;
+
+  useEffect(() => {
+    const userKeystroke = setTimeout(() => {
+      console.log('Checking form validity / sending http request');
+      setFormIsValid(emailIsValid && passwordIsValid);
+    }, 700);
+
+    /*
+     * With Cleanup function u dont need to send a http request for every user
+     * input is change. You can wait for a several time to send a request to
+     * the server. Read more here https://reactjs.org/docs/hooks-effect.html
+     */
+    return () => {
+      console.log('This is the clean up function');
+      clearTimeout(userKeystroke);
+    };
+  }, [emailIsValid, passwordIsValid]);
 
   const emailChangeHandler = (event) => {
-    setEnteredEmail(event.target.value);
-
-    setFormIsValid(
-      event.target.value.includes('@') && enteredPassword.trim().length > 6
-    );
+    dispatchEmail({ type: 'USER_INPUT', payload: event.target.value });
   };
 
   const passwordChangeHandler = (event) => {
-    setEnteredPassword(event.target.value);
-
-    setFormIsValid(
-      event.target.value.trim().length > 6 && enteredEmail.includes('@')
-    );
-  };
-
-  const validateEmailHandler = () => {
-    setEmailIsValid(enteredEmail.includes('@'));
-  };
-
-  const validatePasswordHandler = () => {
-    setPasswordIsValid(enteredPassword.trim().length > 6);
+    dispatchPassword({ type: 'USER_INPUT', payload: event.target.value });
   };
 
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onLogin(enteredEmail, enteredPassword);
+    props.onLogin(emailState.value, passwordState.value);
   };
 
   return (
@@ -45,30 +84,28 @@ const Login = (props) => {
       <form onSubmit={submitHandler}>
         <div
           className={`${classes.control} ${
-            emailIsValid === false ? classes.invalid : ''
+            emailState.isValid === false ? classes.invalid : ''
           }`}
         >
           <label htmlFor="email">E-Mail</label>
           <input
             type="email"
             id="email"
-            value={enteredEmail}
+            value={emailState.value}
             onChange={emailChangeHandler}
-            onBlur={validateEmailHandler}
           />
         </div>
         <div
           className={`${classes.control} ${
-            passwordIsValid === false ? classes.invalid : ''
+            passwordState.isValid === false ? classes.invalid : ''
           }`}
         >
           <label htmlFor="password">Password</label>
           <input
             type="password"
             id="password"
-            value={enteredPassword}
+            value={passwordState.value}
             onChange={passwordChangeHandler}
-            onBlur={validatePasswordHandler}
           />
         </div>
         <div className={classes.actions}>
