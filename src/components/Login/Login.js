@@ -1,62 +1,73 @@
-import React, { useState, useEffect } from 'react';
+import React, { useReducer, useEffect, useState } from 'react';
 
 import Card from '../UI/Card/Card';
 import classes from './Login.module.css';
 import Button from '../UI/Button/Button';
 
+const inputInitialState = { value: '', isValid: null };
+
+const emailReducer = (state, action) => {
+  switch (action.type) {
+    case 'USER_INPUT':
+      return { value: action.payload, isValid: action.payload.includes('@') };
+
+    default:
+      throw new Error();
+  }
+};
+
+const passwordReducer = (state, action) => {
+  switch (action.type) {
+    case 'USER_INPUT':
+      return {
+        value: action.payload,
+        isValid: action.payload.trim().length > 6,
+      };
+
+    default:
+      throw new Error();
+  }
+};
+
 const Login = (props) => {
-  const [enteredEmail, setEnteredEmail] = useState('');
-  const [emailIsValid, setEmailIsValid] = useState();
-  const [enteredPassword, setEnteredPassword] = useState('');
-  const [passwordIsValid, setPasswordIsValid] = useState();
   const [formIsValid, setFormIsValid] = useState(false);
+  const [emailState, dispatchEmail] = useReducer(
+    emailReducer,
+    inputInitialState
+  );
+  const [passwordState, dispatchPassword] = useReducer(
+    passwordReducer,
+    inputInitialState
+  );
 
-  // useEffect(() => {
-  //   const identifier = setTimeout(() => {
-  //     console.log('Checking form validity / sending http request');
-  //     setFormIsValid(
-  //       enteredEmail.includes('@') && enteredPassword.trim().length > 6
-  //     );
-  //   }, 700);
+  useEffect(() => {
+    const userKeystroke = setTimeout(() => {
+      console.log('Checking form validity / sending http request');
+      setFormIsValid(emailState.isValid && passwordState.isValid);
+    }, 700);
 
-  //   /*
-  //    * With Cleanup function u dont need to send a http request for every user
-  //    * input is change. You can wait for a several time to send a request to
-  //    * the server. Read more here https://reactjs.org/docs/hooks-effect.html
-  //    */
-  //   return () => {
-  //     console.log('This is the clean up function');
-  //     clearTimeout(identifier);
-  //   };
-  // }, [enteredEmail, enteredPassword]);
+    /*
+     * With Cleanup function u dont need to send a http request for every user
+     * input is change. You can wait for a several time to send a request to
+     * the server. Read more here https://reactjs.org/docs/hooks-effect.html
+     */
+    return () => {
+      console.log('This is the clean up function');
+      clearTimeout(userKeystroke);
+    };
+  }, [emailState, passwordState]);
 
   const emailChangeHandler = (event) => {
-    setEnteredEmail(event.target.value);
-
-    setFormIsValid(
-      event.target.value.includes('@') && enteredPassword.trim().length > 6
-    );
+    dispatchEmail({ type: 'USER_INPUT', payload: event.target.value });
   };
 
   const passwordChangeHandler = (event) => {
-    setEnteredPassword(event.target.value);
-
-    setFormIsValid(
-      event.target.value.trim().length > 6 && enteredEmail.includes('@')
-    );
-  };
-
-  const validateEmailHandler = () => {
-    setEmailIsValid(enteredEmail.includes('@'));
-  };
-
-  const validatePasswordHandler = () => {
-    setPasswordIsValid(enteredPassword.trim().length > 6);
+    dispatchPassword({ type: 'USER_INPUT', payload: event.target.value });
   };
 
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onLogin(enteredEmail, enteredPassword);
+    props.onLogin(emailState.value, passwordState.value);
   };
 
   return (
@@ -64,30 +75,28 @@ const Login = (props) => {
       <form onSubmit={submitHandler}>
         <div
           className={`${classes.control} ${
-            emailIsValid === false ? classes.invalid : ''
+            emailState.isValid === false ? classes.invalid : ''
           }`}
         >
           <label htmlFor="email">E-Mail</label>
           <input
             type="email"
             id="email"
-            value={enteredEmail}
+            value={emailState.value}
             onChange={emailChangeHandler}
-            onBlur={validateEmailHandler}
           />
         </div>
         <div
           className={`${classes.control} ${
-            passwordIsValid === false ? classes.invalid : ''
+            passwordState.isValid === false ? classes.invalid : ''
           }`}
         >
           <label htmlFor="password">Password</label>
           <input
             type="password"
             id="password"
-            value={enteredPassword}
+            value={passwordState.value}
             onChange={passwordChangeHandler}
-            onBlur={validatePasswordHandler}
           />
         </div>
         <div className={classes.actions}>
