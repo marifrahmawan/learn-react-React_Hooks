@@ -14,8 +14,6 @@ Make sure you have nodejs on youre machine, then use the node package manager np
   npm install
 ```
 
-# Getting Started with Create React App
-
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
